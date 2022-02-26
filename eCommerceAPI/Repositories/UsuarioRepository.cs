@@ -1,9 +1,19 @@
 ﻿using eCommerceAPI.Models;
+using System.Data;
+using System.Data.SqlClient;
 
 namespace eCommerceAPI.Repositories
 {
     public class UsuarioRepository : IUsuarioRepository
     {
+
+        private IDbConnection _connection;
+
+        public UsuarioRepository()
+        {
+            _connection = new SqlConnection("Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=eCommerce;Data Source=DESKTOP-G95Q0DC\\SQLEXPRESS");
+        }
+
         private static List<Usuario> _db = new List<Usuario>()
         {
             new Usuario(){Id=1,Nome="James Hetfild", Email="metallica@hotmail.com"},
