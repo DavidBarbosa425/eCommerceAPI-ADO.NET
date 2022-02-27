@@ -21,10 +21,7 @@ namespace eCommerceAPI.Repositories
             new Usuario(){Id=3,Nome="Michael Jackson", Email="mj@gmail.com"},
         };
 
-        public void Delete(int id)
-        {
-            _db.Remove(_db.FirstOrDefault(x => x.Id == id));
-        }
+
 
         public List<Usuario> Get()
         {
@@ -41,8 +38,8 @@ namespace eCommerceAPI.Repositories
                 while (dataReader.Read())
                 {
                     Usuario usuario = new Usuario();
-                    usuario.Id = dataReader.GetInt32("id");
-                    usuario.Nome = dataReader.GetString("name");
+                    usuario.Id = dataReader.GetInt32("Id");
+                    usuario.Nome = dataReader.GetString("nome");
                     usuario.Email = dataReader.GetString("email");
                     usuario.Sexo = dataReader.GetString("Sexo");
                     usuario.RG = dataReader.GetString("RG");
@@ -63,29 +60,119 @@ namespace eCommerceAPI.Repositories
 
         public Usuario Get(int id)
         {
-            return _db.FirstOrDefault(x => x.Id == id);
+            try
+            {
+                SqlCommand command = new SqlCommand();
+                command.CommandText = "select * from usuarios where id = @id";
+                command.Parameters.AddWithValue("@id", id);
+                command.Connection = (SqlConnection)_connection;
+
+                _connection.Open();
+
+                SqlDataReader dataReader = command.ExecuteReader();
+
+                while (dataReader.Read())
+                {
+                    Usuario usuario = new Usuario();
+                    usuario.Id = dataReader.GetInt32("Id");
+                    usuario.Nome = dataReader.GetString("nome");
+                    usuario.Email = dataReader.GetString("email");
+                    usuario.Sexo = dataReader.GetString("Sexo");
+                    usuario.RG = dataReader.GetString("RG");
+                    usuario.CPF = dataReader.GetString("CPF");
+                    usuario.NomeMae = dataReader.GetString("NomeMae");
+                    usuario.SituacaoCadastro = dataReader.GetString("SituacaoCadastro");
+                    usuario.DataCadastro = dataReader.GetDateTimeOffset(8);
+
+                    return usuario;
+                }
+            }
+            finally
+            {
+                _connection.Close();
+            }
+            return null;
         }
 
         public void Insert(Usuario usuario)
         {
-            var ultimoUsuario = _db.LastOrDefault();
+            try
+            {
+                SqlCommand command = new SqlCommand();
+                command.CommandText = "insert into usuarios (nome,email,sexo,rg,cpf,nomeMae,situacaoCadastro,dataCadastro)" +
+                    " values(@nome,@email,@sexo,@rg,@cpf,@nomeMae,@situacaoCadastro,@dataCadastro);select CAST(scope_identity() AS int)";
 
-            if (ultimoUsuario == null)
-            {
-                usuario.Id = 1;
+                command.Connection = (SqlConnection)_connection;
+
+
+                command.Parameters.AddWithValue("@Nome", usuario.Nome);
+                command.Parameters.AddWithValue("@email", usuario.Email);
+                command.Parameters.AddWithValue("@sexo", usuario.Sexo);
+                command.Parameters.AddWithValue("@rg", usuario.RG);
+                command.Parameters.AddWithValue("@cpf", usuario.CPF);
+                command.Parameters.AddWithValue("@nomeMae", usuario.NomeMae);
+                command.Parameters.AddWithValue("@situacaoCadastro", usuario.SituacaoCadastro);
+                command.Parameters.AddWithValue("@dataCadastro", usuario.DataCadastro);
+
+                _connection.Open();
+                usuario.Id = (int)command.ExecuteScalar();
             }
-            else
+            finally
             {
-                usuario.Id = ultimoUsuario.Id;
-                usuario.Id++;
+
+                _connection.Close();
             }
-            _db.Add(usuario);
         }
 
         public void Update(Usuario usuario)
         {
-            _db.Remove(_db.FirstOrDefault(x => x.Id == usuario.Id));
-            _db.Add(usuario);
+            try
+            {
+                SqlCommand command = new SqlCommand();
+                command.CommandText = "update usuarios set nome = @nome,email = @email,sexo = @sexo,rg = @rg,cpf = @cpf,nomeMae = @nomeMae,situacaoCadastro = @situacaoCadastro,dataCadastro = @dataCadastro where id = @id";
+
+                command.Connection = (SqlConnection)_connection;
+
+                command.Parameters.AddWithValue("@Nome", usuario.Nome);
+                command.Parameters.AddWithValue("@email", usuario.Email);
+                command.Parameters.AddWithValue("@sexo", usuario.Sexo);
+                command.Parameters.AddWithValue("@rg", usuario.RG);
+                command.Parameters.AddWithValue("@cpf", usuario.CPF);
+                command.Parameters.AddWithValue("@nomeMae", usuario.NomeMae);
+                command.Parameters.AddWithValue("@situacaoCadastro", usuario.SituacaoCadastro);
+                command.Parameters.AddWithValue("@dataCadastro", usuario.DataCadastro);
+
+                command.Parameters.AddWithValue("@id", usuario.Id);
+
+                _connection.Open();
+                command.ExecuteNonQuery();
+
+            }
+            finally
+            {
+                _connection.Close();
+            }
+        }
+
+        public void Delete(int id)
+        {
+            try
+            {
+                SqlCommand command = new SqlCommand();
+                command.CommandText = "delete usuarios where id = @id";
+                command.Connection = (SqlConnection)_connection;
+
+                command.Parameters.AddWithValue("@id",id);
+
+
+
+                _connection.Open();
+                command.ExecuteNonQuery();
+            }
+            finally
+            {
+                _connection.Close();
+            }
         }
     }
 }

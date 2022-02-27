@@ -1,4 +1,6 @@
-﻿namespace eCommerceAPI.Models
+﻿using eCommerce.API.Models;
+
+namespace eCommerceAPI.Models
 {
     public class Usuario
     {
