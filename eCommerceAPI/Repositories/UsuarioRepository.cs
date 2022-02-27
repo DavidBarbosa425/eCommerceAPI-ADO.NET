@@ -1,4 +1,5 @@
-﻿using eCommerceAPI.Models;
+﻿using eCommerce.API.Models;
+using eCommerceAPI.Models;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -63,7 +64,7 @@ namespace eCommerceAPI.Repositories
             try
             {
                 SqlCommand command = new SqlCommand();
-                command.CommandText = "select * from usuarios where id = @id";
+                command.CommandText = "select * from usuarios u left join contatos c on c.usuarioId = u.id left join EnderecosEntrega e on u.id = e.usuarioId where u.id = @id";
                 command.Parameters.AddWithValue("@id", id);
                 command.Connection = (SqlConnection)_connection;
 
@@ -71,21 +72,63 @@ namespace eCommerceAPI.Repositories
 
                 SqlDataReader dataReader = command.ExecuteReader();
 
+                Dictionary<int, Usuario> usuarios = new Dictionary<int, Usuario>();
+
                 while (dataReader.Read())
                 {
                     Usuario usuario = new Usuario();
-                    usuario.Id = dataReader.GetInt32("Id");
-                    usuario.Nome = dataReader.GetString("nome");
-                    usuario.Email = dataReader.GetString("email");
-                    usuario.Sexo = dataReader.GetString("Sexo");
-                    usuario.RG = dataReader.GetString("RG");
-                    usuario.CPF = dataReader.GetString("CPF");
-                    usuario.NomeMae = dataReader.GetString("NomeMae");
-                    usuario.SituacaoCadastro = dataReader.GetString("SituacaoCadastro");
-                    usuario.DataCadastro = dataReader.GetDateTimeOffset(8);
+                    if (!(usuarios.ContainsKey(dataReader.GetInt32(0))))
+                    {
 
-                    return usuario;
+                        usuario.Id = dataReader.GetInt32(0);
+                        usuario.Nome = dataReader.GetString("nome");
+                        usuario.Email = dataReader.GetString("email");
+                        usuario.Sexo = dataReader.GetString("Sexo");
+                        usuario.RG = dataReader.GetString("RG");
+                        usuario.CPF = dataReader.GetString("CPF");
+                        usuario.NomeMae = dataReader.GetString("NomeMae");
+                        usuario.SituacaoCadastro = dataReader.GetString("SituacaoCadastro");
+                        usuario.DataCadastro = dataReader.GetDateTimeOffset(8);
+
+                        Contato contato = new Contato();
+                        contato.Id = dataReader.GetInt32(9);
+                        contato.UsuarioId = usuario.Id;
+                        contato.Telefone = dataReader.GetString("telefone");
+                        contato.Celular = dataReader.GetString("celular");
+
+                        usuario.Contato = contato;
+
+                        usuarios.Add(usuario.Id, usuario);
+                    }
+                    else
+                    {
+                        usuario = usuarios[dataReader.GetInt32(0)];
+                    }
+
+
+
+
+                    EnderecoEntrega enderecoEntrega = new EnderecoEntrega();
+
+                    enderecoEntrega.Id = dataReader.GetInt32(13);
+                    enderecoEntrega.UsuarioId = usuario.Id;
+                    enderecoEntrega.NomeEndereco = dataReader.GetString("NomeEndereco");
+                    enderecoEntrega.CEP = dataReader.GetString("cep");
+                    enderecoEntrega.Estado = dataReader.GetString("estado");
+                    enderecoEntrega.Cidade = dataReader.GetString("cidade");
+                    enderecoEntrega.Bairro = dataReader.GetString("Bairro");
+                    enderecoEntrega.Endereco = dataReader.GetString("endereco");
+                    enderecoEntrega.Numero = dataReader.GetString("numero");
+                    enderecoEntrega.Complemento = dataReader.GetString("complemento");
+
+                    usuario.EnderecosEntrega = (usuario.EnderecosEntrega == null) ? new List<EnderecoEntrega>() : usuario.EnderecosEntrega;
+
+                    usuario.EnderecosEntrega.Add(enderecoEntrega);
+
+
+                   
                 }
+                return usuarios[usuarios.Keys.First()];
             }
             finally
             {
