@@ -64,7 +64,15 @@ namespace eCommerceAPI.Repositories
             try
             {
                 SqlCommand command = new SqlCommand();
-                command.CommandText = "select * from usuarios u left join contatos c on c.usuarioId = u.id left join EnderecosEntrega e on u.id = e.usuarioId where u.id = @id";
+                command.CommandText = "select * from usuarios u left join contatos c " +
+                                      "on c.usuarioId = u.id left join EnderecosEntrega e " +
+                                      "on u.id = e.usuarioId left join UsuariosDepartamentos ud " +
+                                      "on ud.UsuarioId = u.id " +
+                                      "left join Departamentos d " +
+                                      "on d.id = ud.DepartamentoId " +
+                                      "where u.id = @id " +
+                                      "select * from Departamentos";
+
                 command.Parameters.AddWithValue("@id", id);
                 command.Connection = (SqlConnection)_connection;
 
@@ -123,12 +131,27 @@ namespace eCommerceAPI.Repositories
 
                     usuario.EnderecosEntrega = (usuario.EnderecosEntrega == null) ? new List<EnderecoEntrega>() : usuario.EnderecosEntrega;
 
-                    usuario.EnderecosEntrega.Add(enderecoEntrega);
+                    if (usuario.EnderecosEntrega.FirstOrDefault(a => a.Id == enderecoEntrega.Id) == null)
+                    {
+                        usuario.EnderecosEntrega.Add(enderecoEntrega);
+                    }
 
+                    Departamento departamento = new Departamento();
+                    departamento.Id = dataReader.GetInt32(26);
+                    departamento.Nome = dataReader.GetString(27);
 
-                   
+                    usuario.Departamentos = (usuario.Departamentos == null) ? new List<Departamento>() : usuario.Departamentos;
+
+                    if (usuario.Departamentos.FirstOrDefault(a => a.Id == departamento.Id) == null)
+                    {
+                        usuario.Departamentos.Add(departamento);
+                    }
                 }
                 return usuarios[usuarios.Keys.First()];
+            }
+            catch (Exception ex)
+            {
+                return null;
             }
             finally
             {
