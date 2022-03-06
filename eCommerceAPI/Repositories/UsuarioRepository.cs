@@ -182,6 +182,35 @@ namespace eCommerceAPI.Repositories
 
                 _connection.Open();
                 usuario.Id = (int)command.ExecuteScalar();
+
+                command.CommandText = "INSERT INTO contatos (usuarioId, telefone, celular) values(@usuarioId, @telefone, @celular);select CAST(scope_identity() AS int)";
+                command.Parameters.AddWithValue("@usuarioId", usuario.Id);
+                command.Parameters.AddWithValue("@telefone", usuario.Contato.Telefone);
+                command.Parameters.AddWithValue("@celular", usuario.Contato.Celular);
+
+                usuario.Contato.UsuarioId = usuario.Id;
+                usuario.Contato.Id = (int)command.ExecuteScalar();
+
+                foreach (var endereco in usuario.EnderecosEntrega)
+                {
+                    command = new SqlCommand();
+                    command.Connection = (SqlConnection)_connection;
+
+                    command.CommandText = "insert into enderecosEntrega (usuarioId, nomeEndereco,cep,estado,cidade,bairro,endereco,numero,complemento)" +
+                        "values(@usuarioId, @nomeEndereco,@cep,@estado,@cidade,@bairro,@endereco,@numero,@complemento);select CAST(scope_identity() AS int)";
+                    command.Parameters.AddWithValue("@usuarioId", endereco.Id);
+                    command.Parameters.AddWithValue("@nomeEndereco", endereco.NomeEndereco);
+                    command.Parameters.AddWithValue("@cep", endereco.CEP);
+                    command.Parameters.AddWithValue("@estado", endereco.Estado);
+                    command.Parameters.AddWithValue("@cidade", endereco.Cidade);
+                    command.Parameters.AddWithValue("@bairro", endereco.Bairro);
+                    command.Parameters.AddWithValue("@endereco", endereco.Endereco);
+                    command.Parameters.AddWithValue("@numero", endereco.Numero);
+                    command.Parameters.AddWithValue("@complemento", endereco.Complemento);
+
+                    endereco.Id = (int)command.ExecuteScalar();
+                    endereco.UsuarioId = usuario.Id;
+                }
             }
             finally
             {
