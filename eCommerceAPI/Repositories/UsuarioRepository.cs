@@ -198,7 +198,7 @@ namespace eCommerceAPI.Repositories
 
                     command.CommandText = "insert into enderecosEntrega (usuarioId, nomeEndereco,cep,estado,cidade,bairro,endereco,numero,complemento)" +
                         "values(@usuarioId, @nomeEndereco,@cep,@estado,@cidade,@bairro,@endereco,@numero,@complemento);select CAST(scope_identity() AS int)";
-                    command.Parameters.AddWithValue("@usuarioId", endereco.Id);
+                    command.Parameters.AddWithValue("@usuarioId", usuario.Id);
                     command.Parameters.AddWithValue("@nomeEndereco", endereco.NomeEndereco);
                     command.Parameters.AddWithValue("@cep", endereco.CEP);
                     command.Parameters.AddWithValue("@estado", endereco.Estado);
@@ -210,6 +210,18 @@ namespace eCommerceAPI.Repositories
 
                     endereco.Id = (int)command.ExecuteScalar();
                     endereco.UsuarioId = usuario.Id;
+                }
+
+                foreach (var departamento in usuario.Departamentos)
+                {
+                    command = new SqlCommand();
+                    command.Connection = (SqlConnection)_connection;
+
+                    command.CommandText = "insert into usuariosDepartamentos (usuarioId, departamentoId) values (@usuarioId, @departamentoId)";
+                    command.Parameters.AddWithValue("usuarioId", usuario.Id);
+                    command.Parameters.AddWithValue("departamentoId", departamento.Id);
+
+                    command.ExecuteScalar();
                 }
             }
             finally
