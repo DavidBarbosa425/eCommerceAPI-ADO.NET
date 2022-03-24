@@ -162,13 +162,19 @@ namespace eCommerceAPI.Repositories
 
         public void Insert(Usuario usuario)
         {
+            _connection.Open();
+            SqlTransaction transaction = (SqlTransaction)_connection.BeginTransaction();
+
             try
             {
                 SqlCommand command = new SqlCommand();
+                command.Transaction = transaction;
+                command.Connection = (SqlConnection)_connection;
+
                 command.CommandText = "insert into usuarios (nome,email,sexo,rg,cpf,nomeMae,situacaoCadastro,dataCadastro)" +
                     " values(@nome,@email,@sexo,@rg,@cpf,@nomeMae,@situacaoCadastro,@dataCadastro);select CAST(scope_identity() AS int)";
 
-                command.Connection = (SqlConnection)_connection;
+
 
 
                 command.Parameters.AddWithValue("@Nome", usuario.Nome);
@@ -180,7 +186,7 @@ namespace eCommerceAPI.Repositories
                 command.Parameters.AddWithValue("@situacaoCadastro", usuario.SituacaoCadastro);
                 command.Parameters.AddWithValue("@dataCadastro", usuario.DataCadastro);
 
-                _connection.Open();
+
                 usuario.Id = (int)command.ExecuteScalar();
 
                 command.CommandText = "INSERT INTO contatos (usuarioId, telefone, celular) values(@usuarioId, @telefone, @celular);select CAST(scope_identity() AS int)";
@@ -195,6 +201,7 @@ namespace eCommerceAPI.Repositories
                 {
                     command = new SqlCommand();
                     command.Connection = (SqlConnection)_connection;
+                    command.Transaction = transaction;
 
                     command.CommandText = "insert into enderecosEntrega (usuarioId, nomeEndereco,cep,estado,cidade,bairro,endereco,numero,complemento)" +
                         "values(@usuarioId, @nomeEndereco,@cep,@estado,@cidade,@bairro,@endereco,@numero,@complemento);select CAST(scope_identity() AS int)";
@@ -216,12 +223,26 @@ namespace eCommerceAPI.Repositories
                 {
                     command = new SqlCommand();
                     command.Connection = (SqlConnection)_connection;
+                    command.Transaction = transaction;
 
                     command.CommandText = "insert into usuariosDepartamentos (usuarioId, departamentoId) values (@usuarioId, @departamentoId)";
                     command.Parameters.AddWithValue("usuarioId", usuario.Id);
                     command.Parameters.AddWithValue("departamentoId", departamento.Id);
 
                     command.ExecuteScalar();
+                }
+
+                transaction.Commit();
+            }
+            catch (Exception)
+            {
+                try
+                {
+                    transaction.Rollback();
+                }
+                catch(Exception e)
+                {
+                   
                 }
             }
             finally
